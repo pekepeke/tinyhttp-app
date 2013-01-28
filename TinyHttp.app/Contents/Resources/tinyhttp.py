@@ -9,6 +9,23 @@ import cgitb; cgitb.enable()
 import urllib, posixpath
 import select, copy
 
+class TimeoutableHTTPServer(BaseHTTPServer.HTTPServer):
+    """HTTPServer class with timeout."""
+
+    timeout = 60.0
+
+    def get_request(self):
+        """Get the request and client address from the socket."""
+        self.socket.settimeout(self.timeout)
+        result = None
+        while result is None:
+            try:
+                result = self.socket.accept()
+            except socket.timeout:
+                pass
+        # Reset timeout on the new socket
+        result[0].settimeout(None)
+        return result
 
 class PHPCGIHTTPRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
 
@@ -350,11 +367,13 @@ class PHPCGIHTTPRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
         root, ext = os.path.splitext(self.path)
         return ext == ".php"
 
-server = BaseHTTPServer.HTTPServer
-# handler = CGIHTTPServer.CGIHTTPRequestHandler
+
+server = TimeoutableHTTPServer
 handler = PHPCGIHTTPRequestHandler
 
-# CGIHTTPServer.CGIHTTPRequestHandler.cgi_directories = ['/']
+# server = BaseHTTPServer.HTTPServer
+# handler = CGIHTTPServer.CGIHTTPRequestHandler
+
 for port in range(50080, 65535):
     try:
         httpd = server(( '0.0.0.0', port ), handler )

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# vim:fdm=marker sw=2 ts=2 ft=python expandtab:
+# vim:fdm=marker sw=4 ts=4 ft=python expandtab:
 
 import socket,sys
 import cgi, os
@@ -10,12 +10,12 @@ import urllib, posixpath
 import select, copy
 
 class TimeoutableHTTPServer(BaseHTTPServer.HTTPServer):
-    """HTTPServer class with timeout."""
-
     timeout = 60.0
+    """HTTPServer class with timeout."""
 
     def get_request(self):
         """Get the request and client address from the socket."""
+        # 10 second timeout
         self.socket.settimeout(self.timeout)
         result = None
         while result is None:
@@ -67,7 +67,13 @@ class PHPCGIHTTPRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
         return None
 
     def is_cgi(self):
-        root, ext = os.path.splitext(self.path)
+        path = self.path
+        i = path.rfind('?')
+        if i >= 0:
+            path, query = path[:i], path[i:]
+        else:
+            query = ''
+        root, ext = os.path.splitext(path)
         if ext == ".pl" or ext == ".cgi":
             self.cgi_info = CGIHTTPServer._url_collapse_path_split(self.path)
             return True
@@ -364,7 +370,7 @@ class PHPCGIHTTPRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
         return ''
 
     def is_php(self, path):
-        root, ext = os.path.splitext(self.path)
+        root, ext = os.path.splitext(path)
         return ext == ".php"
 
 

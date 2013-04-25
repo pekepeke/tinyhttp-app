@@ -106,7 +106,8 @@ class PHPCGIHTTPRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
         if self.is_cgi():
             self.run_cgi()
         else:
-            self.send_error(501, "Can only POST to CGI scripts")
+            self.do_GET()
+            # self.send_error(501, "Can only POST to CGI scripts")
 
     def run_cgi(self):
         # root, ext = os.path.splitext(self.path)
